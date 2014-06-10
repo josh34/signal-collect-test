@@ -16,15 +16,19 @@ object SSSP extends App {
 class Location(id: Int, initialState: Option[Double] = None)
   extends DataFlowVertex(id, initialState) {
   
-  type Signal = Double
+  type Signal = Tuple2[Double, Location]
   
   var parent: Int = -1
 
-  def collect(signal: Double) = {
+  def collect(signal: Signal) = {
+
+	val source = signal._2
+    val signalState = signal._1
+    val sourceState = source.state.get
 
   	val newState = state match {  	
-   	 	case None => Some(signal)
-    	case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
+   	 	case None => Some(signalState)
+    	case Some(currentShortestPath) => Some(math.min(currentShortestPath, signalState))
   	}
 
   	newState
@@ -36,7 +40,7 @@ class Path(t: Int, w: Double) extends OptionalSignalEdge(t) {
   
   def signal = source.state match {
     case None => None
-    case Some(distance: Double) => Some(distance + weight)
+    case Some(distance: Double) => Some((distance + weight, source))
   }
 
   override def weight: Double = w
