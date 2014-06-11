@@ -9,13 +9,18 @@ object SSSP extends App {
     graph addEdge(1, new Path(2, 4.2))
     graph addEdge(2, new Path(3, 3.12))
     graph.execute
+    
     graph foreachVertex (println(_))
+    
+
     graph.shutdown    
 }
 
 class Location(id: Int, initialState: Option[Double] = None)
   extends DataFlowVertex(id, initialState) {
   
+  override def toString: String = "Id: " + id.toString + " Parent:" + parent.toString
+
   type Signal = Tuple2[Double, Location]
   
   var parent: Int = -1
@@ -23,13 +28,14 @@ class Location(id: Int, initialState: Option[Double] = None)
   def collect(signal: Signal) = {
 
 	val source = signal._2
-    val signalState = signal._1
-    val sourceState = source.state.get
+    val signalState = signal._1    
 
   	val newState = state match {  	
    	 	case None => 
+   	 		parent = source.id
    	 		Some(signalState)
     	case Some(currentShortestPath) => 
+    		parent = source.id
     		Some(math.min(currentShortestPath, signalState))
   	}
 
