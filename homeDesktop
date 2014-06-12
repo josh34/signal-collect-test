@@ -1,0 +1,87 @@
+import com.signalcollect._
+
+object SSSP extends App {
+
+	val list: List[(Int, Double)] = List()
+
+	def getPath(g: DefaultGraph[Int, Tuple2[Location, Double]]): List[(Int, Double)] = {
+		List((1, 23.23))
+	}
+
+	def ForEach(data: List[Any], f: Any => Unit): Unit = data match {
+		case x :: xs => 
+			f(x)
+			ForEach(xs, f)
+		case Nil => 
+			()
+	}
+
+	val graph = GraphBuilder.build
+	val graph2 = GraphBuilder.build
+
+	val matrixGraph = Array(Array(0, 1, 3, 0), Array(1, 0, 1, 5), Array(3, 1, 0, 3), Array(0, 5, 3, 0))
+	var parent = for{p <- (0 until matrixGraph.length).toArray} yield -1
+
+	var i = 0
+	var j = 0
+	val s = 0
+
+  	for(i <- 0 until matrixGraph.length){
+		if(i == s)
+			graph addVertex (new Location(i, Some(0), parent(i)))
+		else
+			graph addVertex (new Location(i, None, parent(i)))
+	}
+
+	for(i <- 0 until matrixGraph.length)
+		for(j <- i until matrixGraph.length)
+			if(matrixGraph(i)(j) > 0)
+				graph addEdge(i, new Path(j, matrixGraph(i)(j)))
+	
+    graph.execute
+  
+    graph foreachVertex (println)
+
+    graph.shutdown    
+    graph2.shutdown
+}
+
+
+
+class Location(id: Int, initialState: Option[Double] = None, var parent: Int)
+  extends DataFlowVertex(id, initialState) {
+  
+  override def toString: String = "Id: " + id.toString + ", Parent: " + parent.toString + ", State: " + state.toString
+
+  type Signal = Tuple2[Location, Double]
+  
+
+  def collect(signal: Signal) = {
+
+	val source = signal._1
+    val signalState = signal._2
+
+  	val newState = state match {  	
+   	 	case None => 
+   	 		parent = source.id
+   	 		Some(signalState)
+    	case Some(currentShortestPath) => 
+    		if(currentShortestPath > signalState)
+    			parent = source.id
+    		Some(math.min(currentShortestPath, signalState))
+  	}
+  	newState
+  }
+
+}
+
+class Path(t: Int, var w: Double) extends OptionalSignalEdge(t) {
+  
+  def signal = source.state match {
+    case None => None
+    case Some(distance: Double) => Some((source, distance + weight))
+  }
+
+  override def weight: Double = w
+
+}
