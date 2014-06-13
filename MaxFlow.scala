@@ -47,7 +47,8 @@ object SSSP extends App {
   // Import Graph ********************************************************************************
 
   // Signal/Collect Computation ****************	
-  graph.execute  
+  graph.execute
+  graph.shutdown
   // Signal/Collect Computation ****************
 
   // Update parent ********************
@@ -102,7 +103,8 @@ object SSSP extends App {
 
   // Repeat Again Until No Augmented Path exists ****************************	
   // Signal/Collect Computation ****************	
-  graph.execute  
+  graph.execute
+  graph.shutdown
   // Signal/Collect Computation ****************
 
   // Update parent ********************
@@ -157,7 +159,8 @@ object SSSP extends App {
     // Update Graph ****************************************************
 
     // Signal/Collect Computation ****************	
-    graph.execute  
+    graph.execute
+    graph.shutdown  
     // Signal/Collect Computation ****************
 
     // Update parent *****************************
@@ -168,9 +171,7 @@ object SSSP extends App {
                 }
   // Repeat Again Until No Augmented Path existis ****************************
 
-  println("The Max Flow is: " + max_flow)
-
-  graph.shutdown
+  println("The Max Flow is: " + max_flow) 
 
 }
 
