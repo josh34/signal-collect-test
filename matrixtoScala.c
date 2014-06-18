@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int m[100][100];
+int m[1991][1991];
 int i, j, N;
 
 int main(){
@@ -15,7 +15,7 @@ int main(){
 		printf("Array(%d", m[i][0]);
 		for(j = 1; j < N; j++)
 			printf(",%d", m[i][j]);
-		printf("), ");	
+		printf("),\n ");	
 	}
 	printf("Array(%d", m[N - 1][0]);
 	for(j = 1; j < N; j++)
