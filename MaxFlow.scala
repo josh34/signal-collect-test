@@ -4,182 +4,193 @@
 
 import com.signalcollect._
 
-object SSSP extends App {	
-
-  def MaxFlow(G: Array[Array[Double]], s: Int, t: Int): Double = {
-    // Import Graph ********************************************************************************
-    var matrixGraph = G.map(_.clone)
-    var parent = for{p <- (0 until matrixGraph.length).toArray} yield -1
-    var max_flow: Double = 0.0
-
-    var Vertex: Array[BFSVertex] = ( for {p <- 0 until matrixGraph.length} yield
-          if(p == s) (new BFSVertex(p, Some(0), parent(p)))
-          else  (new BFSVertex(p, None, parent(p))) ).toArray
-
-    var Edges: Array[(Int, BFSEdge)] = ( for {i <- 0 until matrixGraph.length;
-          j <- 0 until matrixGraph.length;
-          if(matrixGraph(i)(j) > 0)} yield
-          (i, new BFSEdge(j, matrixGraph(i)(j))) ).toArray
-     
-    var graph = GraphBuilder.build
-
-    for(i <- 0 until Vertex.length)
-        graph addVertex (Vertex(i)) 
-
-    for(i <- 0 until Edges.length)
-     graph addEdge (Edges(i)._1, Edges(i)._2)
-    // Import Graph ********************************************************************************
-
-    // Signal/Collect Computation ****************
-    graph.execute
-    graph.shutdown
-    // Signal/Collect Computation ****************
-
-    // Update parent ********************
-    for(i <- 0 until Vertex.length)
-     parent(i) = Vertex(i).parent
-    // Update parent ********************
-
-    // Get Min Path Flow from Node T to Node S ******************
-    var son = t
-    var minPathFlow = (Int.MaxValue).toDouble 
-    var i = parent(son)
-
-    while(parent(i) >= 0){
-     if(minPathFlow > (Vertex(i).outgoingEdges(son)).weight)
-       minPathFlow = (Vertex(i).outgoingEdges(son)).weight
-      son = i
-      i = parent(i)
-    }
-
-    if(minPathFlow > (Vertex(i).outgoingEdges(son)).weight)
-      minPathFlow = (Vertex(i).outgoingEdges(son)).weight 
-    max_flow += minPathFlow
-    // Get Min Path Flow from Node T to Node S ******************
-
-    // Update Graph *********************************************
-    i = t
-    var j = parent(i)
-
-    while(parent(i) >= 0){  
-     j = parent(i)
-      matrixGraph(j)(i) -= minPathFlow;
-      matrixGraph(i)(j) += minPathFlow;
-      i = parent(i)
-    }
-
-    Vertex = ( for {p <- 0 until matrixGraph.length} yield
-        if(p == s) (new BFSVertex(p, Some(0), parent(p)))
-        else  (new BFSVertex(p, None, parent(p))) ).toArray
-    Edges = ( for {i <- 0 until matrixGraph.length;
-     j <- 0 until matrixGraph.length;
-          if(matrixGraph(i)(j) > 0)} yield
-          (i, new BFSEdge(j, matrixGraph(i)(j))) ).toArray
-
-    graph = GraphBuilder.build
-
-    for(i <- 0 until Vertex.length)
-      graph addVertex (Vertex(i)) 
-
-    for(i <- 0 until Edges.length)
-     graph addEdge (Edges(i)._1, Edges(i)._2)
-    // Update Graph *********************************************
-
-    // Repeat Again Until No Augmented Path exists ****************************
-    // Signal/Collect Computation ****************
-    graph.execute
-    graph.shutdown
-    // Signal/Collect Computation ****************
-
-    // Update parent ********************
-    for(i <- 0 until Vertex.length)
-     parent(i) = Vertex(i).parent
-    // Update parent ********************
-
-    while(Vertex(t).state != None){
-     // Get Min Path Flow from Node T to Node S ******************
-      son = t
-      minPathFlow = (Int.MaxValue).toDouble 
-      i = parent(son)
-
-      while(parent(i) >= 0){
-       if(minPathFlow > (Vertex(i).outgoingEdges(son)).weight)
-           minPathFlow = (Vertex(i).outgoingEdges(son)).weight
-          son = i
-          i = parent(i)
-      }
-
-      if(minPathFlow > (Vertex(i).outgoingEdges(son)).weight)
-       minPathFlow = (Vertex(i).outgoingEdges(son)).weight  
-      max_flow += minPathFlow
-      // Get Min Path Flow from Node T to Node S ******************
-
-      // Update Graph *********************************************
-      i = t
-      j = parent(i)
-
-      while(parent(i) >= 0){  
-       j = parent(i)
-       matrixGraph(j)(i) -= minPathFlow;
-       matrixGraph(i)(j) += minPathFlow;
-       i = parent(i)
-      }
-
-      Vertex = ( for {p <- 0 until matrixGraph.length} yield
-       if(p == s) (new BFSVertex(p, Some(0), parent(p)))
-          else  (new BFSVertex(p, None, parent(p))) ).toArray
-      Edges = ( for {i <- 0 until matrixGraph.length;
-       j <- 0 until matrixGraph.length;
-          if(matrixGraph(i)(j) > 0)} yield
-           (i, new BFSEdge(j, matrixGraph(i)(j))) ).toArray
-
-      graph = GraphBuilder.build
-
-      for(i <- 0 until Vertex.length)
-       graph addVertex (Vertex(i))  
-
-      for(i <- 0 until Edges.length)
-       graph addEdge (Edges(i)._1, Edges(i)._2)
-      // Update Graph ****************************************************
-
-      // Signal/Collect Computation ****************
-      graph.execute
-      graph.shutdown
-      // Signal/Collect Computation ****************
-
-      // Update parent *****************************
-      for(i <- 0 until Vertex.length)
-       parent(i) = Vertex(i).parent
-      // Update parent *****************************
-
-    }
-    // Repeat Again Until No Augmented Path existis ****************************
-
-    max_flow
-
-  }
-
-  // Graph Data **********************************************************************************
-  var matrixGraph: Array[Array[Double]] = Array(Array(0, 16, 13, 0, 0, 0),
-        Array(0, 0, 10, 12, 0, 0),
-        Array(0, 4, 0, 0, 14, 0),
-        Array(0, 0, 9, 0, 0, 20),
-        Array(0, 0, 0, 7, 0, 4),
-        Array(0, 0, 0, 0, 0, 0))  
-  // Graph Data **********************************************************************************
-
-  println("The Max Flow from Vertex 0 to Vertex 1 " + MaxFlow(matrixGraph, 0, 1))
-  println("The Max Flow from Vertex 0 to Vertex 2 " + MaxFlow(matrixGraph, 0, 2))
-  println("The Max Flow from Vertex 0 to Vertex 3 " + MaxFlow(matrixGraph, 0, 3))
-  println("The Max Flow from Vertex 0 to Vertex 4 " + MaxFlow(matrixGraph, 0, 4))
-  println("The Max Flow from Vertex 0 to Vertex 5 " + MaxFlow(matrixGraph, 0, 5))
+object MaxFlow extends App {	
   
+  val Compute = new MaxFlowGraph
+  
+  /*
+  val s = "a"
+  val t = "d"
+  Compute addBFSVertex("a", None)
+  Compute addBFSVertex("b", None)
+  Compute addBFSVertex("c", None)
+  Compute addBFSVertex("d", None)  
+  Compute addBFSEdge("a", "b", 4)
+  Compute addBFSEdge("b", "c", 3)
+  Compute addBFSEdge("c", "d", 5)
+  Compute addBFSEdge("a", "d", 5)
+	*/
+
+	val s = "0"
+	val t = "5"
+	val matrix: Array[Array[Int]]	= Array(
+		Array(0, 16, 13, 0, 0, 0), 
+		Array(0, 0, 10, 12, 0, 0), 
+		Array(0, 4, 0, 0, 14, 0), 
+		Array(0, 0, 9, 0, 0, 20), 
+		Array(0, 0, 0, 7, 0, 4), 
+		Array(0, 0, 0, 0, 0, 0))
+	Compute addBFSVertex("0", None)
+	Compute addBFSVertex("1", None)
+	Compute addBFSVertex("2", None)
+	Compute addBFSVertex("3", None)
+	Compute addBFSVertex("4", None)
+	Compute addBFSVertex("5", None)  
+  for (i <- 0 until matrix.length; j <- 0 until matrix.length; if matrix(i)(j) > 0)
+  	Compute addBFSEdge(i.toString, j.toString, matrix(i)(j))
+  
+  println(Compute MaxFlow(s, t))
+
 }
 
-class BFSVertex(id: Int, initialState: Option[Double] = None, var parent: Int)
+class MaxFlowGraph {
+
+	def Printing = {
+		for(i <- 0 until Vertex.length)
+			println(Vertex(i))
+		for(i <- 0 until Edges.length)
+			println(Edges(i))
+	}
+
+	def Repeat = {
+
+	}
+
+  var Vertex: Array[BFSVertex] = Array()  
+  var Edges: Array[(String, BFSEdge)] = Array()  
+
+  def FindEdge (x: (String, String), from: Int = 0, data: Array[(String, BFSEdge)]): Int = 
+  	if(x == (data(from)._1, (data(from)._2).targetId)) from
+  	else FindEdge(x, from + 1, data)
+
+  def FindVertex(x: String, from: Int = 0, data: Array[BFSVertex]): Int = 
+  	if(x == data(from).id) from
+  	else FindVertex(x, from + 1, data) 
+
+  // This addBFSVertex method stablishs Symbol "" ********************
+  // as initial parent for all Vertex ********************************
+  def addBFSVertex(id: String, initialState: Option[Double] = None) = 
+    Vertex = Vertex :+ new BFSVertex(id, initialState, "")    
+
+  def addBFSEdge(a: String, b: String, w: Double) = 
+  	Edges = Edges :+ (a, new BFSEdge(b, w))
+
+  def MaxFlow(s: String, t: String): Double = {    
+    var son: String = t
+    var parentSon: String = t
+    // pos will be used to store Finding of the Edges in (**) Upgrade Graph
+    var pos: Int = 0
+    var maxflow: Double = 0.0
+    // minPathFlow will be used in (*) Trace MinPathFlow   
+    var minPathFlow: Double = 0.0
+    // Retrieve a parent Map Internally (source => parent) ****************
+		var parentMap: Map[String, String] = Map()	
+		// Retrieve a weight Map Internally ((source, target) => weight) ******
+		var weightMap: Map[(String, String), Double] = Map()
+
+		// Import Graph Internally ********************************************
+    var graph = GraphBuilder.build
+    
+    for(i <- 0 until Vertex.length){
+    	if(Vertex(i).id == s)
+    		Vertex(i).state = Some(0)
+    	
+    	graph addVertex Vertex(i)
+    }
+
+    for(i <- 0 until Edges.length)    	
+    	graph addEdge (Edges(i)._1, Edges(i)._2)
+    // Import Graph Internally ********************************************    
+    
+    // Signal/Collect Computation *****************************************
+    graph.execute
+    graph.shutdown
+		// Signal/Collect Computation *****************************************
+		
+	  while(Vertex(FindVertex(t, 0 , Vertex)).state != None){	  	
+			// Retrieve a parent Map Internally (source => parent) ****************
+			parentMap = (for(i <- 0 until Vertex.length) 
+														yield Vertex(i).id -> Vertex(i).parent).toMap
+			// Retrieve a parent Map Internally (source => parent) ****************
+
+			// Retrieve a weight Map Internally ((source, target) => weight) ******
+			weightMap = (for(i <- 0 until Edges.length) 
+															yield (Edges(i)._1, (Edges(i)._2).targetId) -> (Edges(i)._2).weight ).toMap
+			// Retrieve a weight Map Internally ((source, target) => weight) ******
+
+			// (*) Trace MinPathFlow ****************************************
+			son = t
+			parentSon = parentMap(son)
+			minPathFlow = weightMap(parentSon, son)
+			while(parentSon != ""){				
+				if(minPathFlow > weightMap(parentSon, son))
+					minPathFlow = weightMap(parentSon, son)
+				son = parentSon
+				parentSon = parentMap(son)
+			}
+			maxflow += minPathFlow
+			// (*) Trace MinPathFlow ****************************************
+
+			// (**) Update Graph *********************************************
+	    son = t
+	    parentSon = parentMap(son)
+	    while(parentSon != ""){    	
+	    	pos = FindEdge((parentSon, son), 0, Edges)
+	    	//(parentSon, son) -> w.actual - minPathFlow    	
+	    	(Edges(pos)._2).w = (Edges(pos)._2).w - minPathFlow
+	    		
+	    	if(!(weightMap contains (son, parentSon))){
+	    		// Need to be added
+	    		addBFSEdge(son, parentSon, minPathFlow)
+	    	}
+	    	else{
+	    		// Only update weight    		
+	    		pos = FindEdge((son, parentSon), 0, Edges)
+	    		//(son, parentSon) -> w.actual + minPathFlow
+	    		(Edges(pos)._2).w = (Edges(pos)._2).w + minPathFlow
+	    	}
+	    	son = parentSon
+	    	parentSon = parentMap(son)
+	    }
+
+	    for(i <- 	0 until Vertex.length){
+	    	if(Vertex(i).id == s)
+	    		Vertex(i).state = Some(0)
+	    	else
+	    		Vertex(i).state = None
+	    }
+	    Edges = Edges filter (x => (x._2).w > 0)
+	    Vertex = Vertex map (x => new BFSVertex(x.id, x.state, ""))
+	    // (**) Update Graph *********************************************
+
+	    // Import Graph Internally ********************************************
+	    graph = GraphBuilder.build
+	    
+	    for(i <- 0 until Vertex.length){    	
+	    	if(Vertex(i).id == s)
+	    		Vertex(i).state = Some(0)    	
+	    	graph addVertex Vertex(i)
+	    }
+
+    	for(i <- 0 until Edges.length)    	
+    		graph addEdge (Edges(i)._1, Edges(i)._2)
+    	// Import Graph Internally ********************************************  	    
+	    
+	    // Signal/Collect Computation *****************************************
+	    graph.execute
+	    graph.shutdown
+			// Signal/Collect Computation *****************************************
+
+			// (**) Update Graph *********************************************
+	  }
+	  maxflow
+  }
+}
+
+class BFSVertex(id: String, initialState: Option[Double] = None, var parent: String)
   extends DataFlowVertex(id, initialState) {
 
-  override def toString: String = "Id: " + id.toString + ", Parent: " + parent.toString + ", State: " + state.toString
+  override def toString: String = "Id: " + id + ", Parent: " + parent + ", State: " + state.toString
 
   type Signal = Tuple2[BFSVertex, Double]
 
@@ -197,13 +208,11 @@ class BFSVertex(id: Int, initialState: Option[Double] = None, var parent: Int)
          parent = source.id
         Some(math.min(currentShortestBFSEdge, signalState))
     }
-
-    newState
-    
+    newState    
   }
 }
 
-class BFSEdge(t: Int, var w: Double) extends OptionalSignalEdge(t) {
+class BFSEdge(t: String, var w: Double) extends OptionalSignalEdge(t) {
 
   def signal = source.state match {
     case None => None
@@ -213,5 +222,4 @@ class BFSEdge(t: Int, var w: Double) extends OptionalSignalEdge(t) {
   override def weight: Double = w
 
   override def toString: String = "BFSVertex: " + t + " with weight " + w
-
 }
