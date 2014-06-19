@@ -19,7 +19,13 @@ object SSSP extends App {
   Compute addBFSEdge("a", "b", 4)
   Compute addBFSEdge("b", "c", 3)
   Compute addBFSEdge("c", "d", 5)
-  
+  Compute addBFSEdge("a", "d", 5)
+
+  val matrix: Array[Array[Int]]	= Array(Array(0, 16, 13, 0, 0, 0), Array(0, 0, 10, 12, 0, 0), Array(0, 4, 0, 0, 14, 0), Array(0, 0, 9, 0, 0, 20), Array(0, 0, 0, 7, 0, 4), Array(0, 0, 0, 0, 0, 0))
+  /*
+  for (i <- 0 until matrix.length; j <- 0 until matrix.length; if matrix(i)(j) > 0)
+  	println(matrix(i)(j))     
+  */
   println(Compute MaxFlow(s, t))
 
 }
@@ -62,6 +68,7 @@ class MaxFlowGraph {
     
     // Import Graph Internally ********************************************
     var graph = GraphBuilder.build
+    
     for(i <- 0 until Vertex.length){
     	if(Vertex(i).id == s)
     		Vertex(i).state = Some(0)
@@ -69,14 +76,14 @@ class MaxFlowGraph {
     	graph addVertex Vertex(i)
     }
 
-    for(i <- 0 until Edges.length)
-      graph addEdge (Edges(i)._1, Edges(i)._2)
-    // Import Graph Internally ********************************************    
+    for(i <- 0 until Edges.length)    	
+    	graph addEdge (Edges(i)._1, Edges(i)._2)
+    // Import Graph Internally ********************************************
 
     // Signal/Collect Computation *****************************************
     graph.execute
     graph.shutdown
-		// Signal/Collect Computation *****************************************		
+		// Signal/Collect Computation *****************************************
 
 		// Retrieve a parent Map Internally (source => parent) ****************
 		var parentMap: Map[String, String] = (for(i <- 0 until Vertex.length) 
@@ -120,34 +127,37 @@ class MaxFlowGraph {
 	  	}
 	  	son = parentSon
 	  	parentSon = parentMap(son)
-	  }
-	  for(i <- 0 until Vertex.length){
+	  }												
+	  for(i <- 	0 until Vertex.length){
     	if(Vertex(i).id == s)
     		Vertex(i).state = Some(0)
     	else
     		Vertex(i).state = None
     }
+    Edges = Edges filter (x => (x._2).w > 0)
+    Vertex = Vertex map (x => new BFSVertex(x.id, x.state, ""))
 		// (**) Update Graph *********************************************
 		
 		// Repeat ***************************************************************
-	  while(Vertex(FindVertex(t, 0 , Vertex)).state != None){	  
-	    // Import Graph Internally ********************************************
-	    graph = GraphBuilder.build
-	    for(i <- 0 until Vertex.length){
-	    	if(Vertex(i).id == s)
-	    		Vertex(i).state = Some(0)	    	
-	    	graph addVertex Vertex(i)
-	    }
+    // Import Graph Internally ********************************************
+    graph = GraphBuilder.build
+    
+    for(i <- 0 until Vertex.length){    	
+    	if(Vertex(i).id == s)
+    		Vertex(i).state = Some(0)    	
+    	graph addVertex Vertex(i)
+    }
 
-	    for(i <- 0 until Edges.length)
-	      graph addEdge (Edges(i)._1, Edges(i)._2)
-	    // Import Graph Internally ********************************************
-	    
-	    // Signal/Collect Computation *****************************************
-	    graph.execute
-	    graph.shutdown
-			// Signal/Collect Computation *****************************************
-			
+    for(i <- 0 until Edges.length)    	
+    	graph addEdge (Edges(i)._1, Edges(i)._2)
+    // Import Graph Internally ********************************************  
+
+    // Signal/Collect Computation *****************************************
+    graph.execute    
+    graph.shutdown
+		// Signal/Collect Computation *****************************************
+		
+	  while(Vertex(FindVertex(t, 0 , Vertex)).state != None){	  	
 			// Retrieve a parent Map Internally (source => parent) ****************
 			parentMap = (for(i <- 0 until Vertex.length) 
 														yield Vertex(i).id -> Vertex(i).parent).toMap
@@ -192,12 +202,35 @@ class MaxFlowGraph {
 	    	son = parentSon
 	    	parentSon = parentMap(son)
 	    }
-	    for(i <- 0 until Vertex.length){
+
+	    for(i <- 	0 until Vertex.length){
 	    	if(Vertex(i).id == s)
 	    		Vertex(i).state = Some(0)
 	    	else
 	    		Vertex(i).state = None
 	    }
+	    Edges = Edges filter (x => (x._2).w > 0)
+	    Vertex = Vertex map (x => new BFSVertex(x.id, x.state, ""))
+	    // (**) Update Graph *********************************************
+
+	    // Import Graph Internally ********************************************
+	    graph = GraphBuilder.build
+	    
+	    for(i <- 0 until Vertex.length){    	
+	    	if(Vertex(i).id == s)
+	    		Vertex(i).state = Some(0)    	
+	    	graph addVertex Vertex(i)
+	    }
+
+    	for(i <- 0 until Edges.length)    	
+    		graph addEdge (Edges(i)._1, Edges(i)._2)
+    	// Import Graph Internally ********************************************  	    
+	    
+	    // Signal/Collect Computation *****************************************
+	    graph.execute
+	    graph.shutdown
+			// Signal/Collect Computation *****************************************
+
 			// (**) Update Graph *********************************************
 	  }
 	  maxflow
